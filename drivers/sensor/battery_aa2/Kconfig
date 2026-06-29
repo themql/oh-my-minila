@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: MIT
+
+DT_COMPAT_OMM_BATTERY_AA2_VOLTAGE_DIVIDER := omm,battery-aa2-voltage-divider
+
+config ZMK_BATTERY_AA2_VOLTAGE_DIVIDER
+    bool
+    default $(dt_compat_enabled,$(DT_COMPAT_OMM_BATTERY_AA2_VOLTAGE_DIVIDER))
+    select ADC
+    select ZMK_BATTERY
+    depends on SENSOR
+    help
+      Enable two AA/AAA cell battery monitoring using a voltage divider.

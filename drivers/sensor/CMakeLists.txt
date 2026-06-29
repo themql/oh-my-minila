@@ -1,0 +1,1 @@
+add_subdirectory_ifdef(CONFIG_ZMK_BATTERY_AA2_VOLTAGE_DIVIDER battery_aa2)

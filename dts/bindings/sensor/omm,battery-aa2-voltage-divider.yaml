@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: MIT
+
+description: Two AA/AAA cell battery SoC monitoring using voltage divider
+
+compatible: "omm,battery-aa2-voltage-divider"
+
+include: voltage-divider.yaml
