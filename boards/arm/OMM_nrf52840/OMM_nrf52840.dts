@@ -13,10 +13,20 @@
         zmk,battery = &vbatt;
     };
 
+    aliases {
+        led0 = &d1_low_battery_led;
+        led1 = &d2_bt_pairing_led;
+    };
+
     leds {
         compatible = "gpio-leds";
-        blue_led: led_0 {
-            gpios = <&gpio0 2 GPIO_ACTIVE_HIGH>;
+        d1_low_battery_led: led_0 {
+            gpios = <&gpio0 2 GPIO_ACTIVE_LOW>;
+            label = "D1_LOW_BATTERY";
+        };
+        d2_bt_pairing_led: led_1 {
+            gpios = <&gpio1 13 GPIO_ACTIVE_LOW>;
+            label = "D2_BT_PAIRING";
         };
     };
 

@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: MIT
+
+config OMM_LED_TEST
+    bool "Enable OMM LED power-on test"
+    default y
+    depends on BOARD_OMM_NRF52840
+    depends on GPIO
+    help
+      Turn on D1 and D2 at startup to verify active-low LED wiring.

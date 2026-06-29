@@ -1,5 +1,5 @@
+rsource "led/Kconfig"
+
 if SENSOR
-
 rsource "sensor/Kconfig"
-
 endif # SENSOR
