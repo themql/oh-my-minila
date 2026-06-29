@@ -5,7 +5,8 @@ config OMM_STATUS_LEDS
     default y
     depends on BOARD_OMM_NRF52840
     depends on GPIO
-    depends on ZMK_BATTERY
+    depends on ZMK_BATTERY_REPORTING
+    depends on ZMK_BLE
     help
       Drive D1 for low battery and D2 for BLE pairing status.
 
