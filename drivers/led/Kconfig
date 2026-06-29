@@ -1,9 +1,30 @@
 # SPDX-License-Identifier: MIT
 
-config OMM_LED_TEST
-    bool "Enable OMM LED power-on test"
+config OMM_STATUS_LEDS
+    bool "Enable OMM status LEDs"
     default y
     depends on BOARD_OMM_NRF52840
     depends on GPIO
+    depends on ZMK_BATTERY
     help
-      Turn on D1 and D2 at startup to verify active-low LED wiring.
+      Drive D1 for low battery and D2 for BLE pairing status.
+
+if OMM_STATUS_LEDS
+
+config OMM_STATUS_LEDS_LOW_BATTERY_THRESHOLD
+    int "OMM low battery LED threshold"
+    default 20
+    range 0 100
+    help
+      Turn on D1 when the reported battery state of charge is less than or
+      equal to this percentage.
+
+config OMM_STATUS_LEDS_PAIRING_BLINK_MS
+    int "OMM pairing LED blink interval in milliseconds"
+    default 500
+    range 50 10000
+    help
+      Toggle D2 at this interval while the active BLE profile is open and not
+      connected.
+
+endif # OMM_STATUS_LEDS

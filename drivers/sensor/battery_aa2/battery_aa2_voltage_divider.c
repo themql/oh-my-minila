@@ -16,8 +16,9 @@
 
 LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
-#define AA2_EMPTY_MV 2000U
-#define AA2_FULL_MV 3200U
+BUILD_ASSERT(CONFIG_ZMK_BATTERY_AA2_FULL_MV > CONFIG_ZMK_BATTERY_AA2_EMPTY_MV,
+             "CONFIG_ZMK_BATTERY_AA2_FULL_MV must be greater than "
+             "CONFIG_ZMK_BATTERY_AA2_EMPTY_MV");
 
 struct io_channel_config {
     uint8_t channel;
@@ -44,13 +45,14 @@ struct aa2_bvd_data {
 };
 
 static uint8_t aa2_mv_to_pct(uint16_t bat_mv) {
-    if (bat_mv >= AA2_FULL_MV) {
+    if (bat_mv >= CONFIG_ZMK_BATTERY_AA2_FULL_MV) {
         return 100;
-    } else if (bat_mv <= AA2_EMPTY_MV) {
+    } else if (bat_mv <= CONFIG_ZMK_BATTERY_AA2_EMPTY_MV) {
         return 0;
     }
 
-    return (uint32_t)(bat_mv - AA2_EMPTY_MV) * 100U / (AA2_FULL_MV - AA2_EMPTY_MV);
+    return (uint32_t)(bat_mv - CONFIG_ZMK_BATTERY_AA2_EMPTY_MV) * 100U /
+           (CONFIG_ZMK_BATTERY_AA2_FULL_MV - CONFIG_ZMK_BATTERY_AA2_EMPTY_MV);
 }
 
 static int aa2_channel_get(const struct aa2_battery_value *value, enum sensor_channel chan,

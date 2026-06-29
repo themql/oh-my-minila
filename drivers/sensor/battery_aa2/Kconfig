@@ -10,3 +10,21 @@ config ZMK_BATTERY_AA2_VOLTAGE_DIVIDER
     depends on SENSOR
     help
       Enable two AA/AAA cell battery monitoring using a voltage divider.
+
+if ZMK_BATTERY_AA2_VOLTAGE_DIVIDER
+
+config ZMK_BATTERY_AA2_EMPTY_MV
+    int "Two-cell dry battery empty voltage in millivolts"
+    default 2000
+    range 0 5000
+    help
+      Battery voltage reported as 0 percent state of charge.
+
+config ZMK_BATTERY_AA2_FULL_MV
+    int "Two-cell dry battery full voltage in millivolts"
+    default 3200
+    range 0 5000
+    help
+      Battery voltage reported as 100 percent state of charge.
+
+endif # ZMK_BATTERY_AA2_VOLTAGE_DIVIDER
