@@ -1,0 +1,6 @@
+if SHIELD_OMM
+
+config ZMK_KEYBOARD_NAME
+    default "OMM"
+
+endif # SHIELD_OMM

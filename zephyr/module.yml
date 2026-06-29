@@ -1,3 +1,4 @@
+name: zephyr-keyboard-OMM
 build:
   settings:
     board_root: .

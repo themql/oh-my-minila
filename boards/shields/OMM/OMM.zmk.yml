@@ -1,0 +1,10 @@
+file_format: "1"
+id: OMM
+name: OMM
+type: shield
+features:
+  - keys
+outputs:
+  - usb
+  - ble
+url: https://baidu.com
