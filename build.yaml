@@ -21,3 +21,6 @@
 include:
   - board: OMM_nrf52840
     shield: OMM
+  - board: OMM_nrf52840
+    shield: settings_reset
+    artifact-name: OMM_nrf52840_settings_reset
