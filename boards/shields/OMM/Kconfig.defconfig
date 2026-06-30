@@ -1,6 +1,6 @@
 if SHIELD_OMM
 
 config ZMK_KEYBOARD_NAME
-    default "OMM"
+    default "oh my Minila"
 
 endif # SHIELD_OMM
