@@ -1,0 +1,29 @@
+--- a/app/src/hog.c
++++ b/app/src/hog.c
+@@ -317,7 +317,7 @@
+         }
+ 
+         struct bt_gatt_notify_params notify_params = {
+-            .attr = &hog_svc.attrs[5],
++            .attr = &hog_svc.attrs[6],
+             .data = &report,
+             .len = sizeof(report),
+         };
+@@ -369,7 +369,7 @@
+         }
+ 
+         struct bt_gatt_notify_params notify_params = {
+-            .attr = &hog_svc.attrs[9],
++            .attr = &hog_svc.attrs[10],
+             .data = &report,
+             .len = sizeof(report),
+         };
+@@ -422,7 +422,7 @@
+         }
+ 
+         struct bt_gatt_notify_params notify_params = {
+-            .attr = &hog_svc.attrs[13],
++            .attr = &hog_svc.attrs[14],
+             .data = &report,
+             .len = sizeof(report),
+         };

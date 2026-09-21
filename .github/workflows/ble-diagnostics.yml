@@ -1,0 +1,75 @@
+name: Build BLE diagnostic firmware
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: zmkfirmware/zmk-build-arm:stable
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepare isolated west workspace
+        shell: bash
+        run: |
+          set -euo pipefail
+          task_dir=$(mktemp -d)
+          echo "BLE_DIAG_WORKSPACE=$task_dir" >> "$GITHUB_ENV"
+          mkdir -p "$task_dir/config"
+          cp -R config/. "$task_dir/config/"
+          cd "$task_dir"
+          west init -l config
+          west update --fetch-opt=--filter=tree:0
+          west zephyr-export
+
+      - name: Check source version and apply diagnostic patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$BLE_DIAG_WORKSPACE"
+          test "$(git -C zmk rev-parse HEAD)" = edf5c0814fd3ea202e43aad2d68fd32e882a518c
+          west manifest --freeze > resolved-manifest.yml
+          git -C zmk apply --check "$GITHUB_WORKSPACE/diagnostics/zmk-v0.3-ble-diagnostics.patch"
+          git -C zmk apply "$GITHUB_WORKSPACE/diagnostics/zmk-v0.3-ble-diagnostics.patch"
+          git -C zmk diff > applied-diagnostics.patch
+
+      - name: Build OMM with BLE diagnostics and USB serial logging
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$BLE_DIAG_WORKSPACE"
+          west build -s zmk/app -d build -b OMM_nrf52840 -- \
+            -DSHIELD=OMM \
+            -DZMK_CONFIG="$BLE_DIAG_WORKSPACE/config" \
+            -DZMK_EXTRA_MODULES="$GITHUB_WORKSPACE" \
+            -DEXTRA_CONF_FILE="$GITHUB_WORKSPACE/diagnostics/ble-diagnostics.conf"
+
+      - name: Collect firmware and build evidence
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$GITHUB_WORKSPACE/ble-diagnostic-artifacts"
+          cd "$BLE_DIAG_WORKSPACE"
+          for file in resolved-manifest.yml applied-diagnostics.patch \
+            build/zephyr/.config build/zephyr/zephyr.dts build/zephyr/zmk.uf2 \
+            build/zephyr/zmk.elf build/zephyr/zmk.map; do
+            if [ -f "$file" ]; then
+              cp "$file" "$GITHUB_WORKSPACE/ble-diagnostic-artifacts/"
+            fi
+          done
+          if [ -f build/zephyr/.config ]; then
+            cp build/zephyr/.config "$GITHUB_WORKSPACE/ble-diagnostic-artifacts/zephyr.config"
+          fi
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: OMM-BLE-diagnostics
+          path: ble-diagnostic-artifacts/
+          if-no-files-found: warn
