@@ -130,3 +130,15 @@ HOG 发送的是 keyboard report **body**，不包含 USB 使用的前置 report
 - [本次核对的 Zephyr GATT 源码引用](https://github.com/zmkfirmware/zephyr/blob/v3.5.0%2Bzmk-fixes/subsys/bluetooth/host/gatt.c)；[订阅检查 Kconfig](https://github.com/zmkfirmware/zephyr/blob/v3.5.0%2Bzmk-fixes/subsys/bluetooth/host/Kconfig.gatt)。这些是引用链接，实际构建请以 artifact 中冻结的提交号为准。
 
 下一项最有价值的证据是故障时连续按/放 A 的日志，以及相同构建正常时的对照，尤其是 **endpoint、peer/profile、security、keyboard subscription、notify result** 五项。
+
+## 首轮实机结果与 1M PHY 对照
+
+用户提供的实际配置确认：2M PHY=y，USB HID=n，USB logging=y，两个开机重置选项均未启用，CCC lazy loading/store-on-write 均启用。启动日志标识 Zephyr build `dacab4875df7`。
+
+首次日志显示恢复 slot 0 的主机地址，约 6.81 秒连接到该主机，约 6.85 秒安全等级升至 4、HOG CCC 恢复；数据库 hash 与保存值一致。约 6.884 秒后用户观察到日志停止、Windows 短暂已连接后断开。没有捕获到断开回调或 fault，不能宣称已证明 MCU 死锁，也不能宣称 bond 被清除。
+
+Windows 蓝牙关闭并重启键盘后，三次 A 的按下/释放共六个事件都经过扫描、HID 更新、BLE:0 报告入队和工作队列；因为没有连接而丢弃报告属于预期行为。用户随后开启 Windows 蓝牙，再次出现短暂连接后断开、无新增日志。因此后续优先隔离连接触发的问题，同时保留诊断日志或 USB 通道自身异常的可能。
+
+工作流新增 `disable_2m` 复选框，默认 false 保留基线。勾选后只增加 `CONFIG_BT_CTLR_PHY_2M=n`，不改日志、安全选项或配对数据。构建完成会检查最终 `.config` 确实禁用 2M，artifact 名为 `OMM-BLE-diagnostics-1M`。该变体尚待 Actions 编译和硬件对照；此前日志没有实际 PHY 协商记录，故这只是有官方兼容性依据的实验，不能视为已经定位 2M 故障。
+
+测试：刷 1M 变体，Windows 蓝牙先关闭，确认本地按键日志正常，再开启蓝牙观察连接和三次 A 的结果。保留旧配对和同样的 USB/串口工具。若仍失败，下一个独立实验应隔离同一 Windows 上的 USB 日志路径或诊断开销；不要同时清 bond 或叠加其他修复。

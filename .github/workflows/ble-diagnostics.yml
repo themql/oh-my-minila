@@ -2,6 +2,13 @@ name: Build BLE diagnostic firmware
 
 on:
   workflow_dispatch:
+    inputs:
+      disable_2m:
+        description: "Disable BLE 2M PHY for the Realtek comparison test"
+        type: boolean
+        default: false
+
+run-name: BLE diagnostics (disable 2M=${{ inputs.disable_2m }})
 
 permissions:
   contents: read
@@ -41,14 +48,24 @@ jobs:
 
       - name: Build OMM with BLE diagnostics and USB serial logging
         shell: bash
+        env:
+          DISABLE_2M: ${{ inputs.disable_2m }}
         run: |
           set -euo pipefail
           cd "$BLE_DIAG_WORKSPACE"
+          phy_args=()
+          if [ "$DISABLE_2M" = true ]; then
+            phy_args=(-DCONFIG_BT_CTLR_PHY_2M=n)
+          fi
           west build -s zmk/app -d build -b OMM_nrf52840 -- \
             -DSHIELD=OMM \
             -DZMK_CONFIG="$BLE_DIAG_WORKSPACE/config" \
             -DZMK_EXTRA_MODULES="$GITHUB_WORKSPACE" \
-            -DEXTRA_CONF_FILE="$GITHUB_WORKSPACE/diagnostics/ble-diagnostics.conf"
+            -DEXTRA_CONF_FILE="$GITHUB_WORKSPACE/diagnostics/ble-diagnostics.conf" \
+            "${phy_args[@]}"
+          if [ "$DISABLE_2M" = true ]; then
+            grep -Fx '# CONFIG_BT_CTLR_PHY_2M is not set' build/zephyr/.config
+          fi
 
       - name: Collect firmware and build evidence
         if: always()
@@ -71,6 +88,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: OMM-BLE-diagnostics
+          name: OMM-BLE-diagnostics${{ inputs.disable_2m && '-1M' || '' }}
           path: ble-diagnostic-artifacts/
           if-no-files-found: warn
