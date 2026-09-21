@@ -7,8 +7,12 @@ on:
         description: "Disable BLE 2M PHY for the Realtek comparison test"
         type: boolean
         default: false
+      fault_diagnostics:
+        description: "Use quieter logs with assertions and hardware stack protection"
+        type: boolean
+        default: false
 
-run-name: BLE diagnostics (disable 2M=${{ inputs.disable_2m }})
+run-name: BLE diagnostics (disable 2M=${{ inputs.disable_2m }}, fault checks=${{ inputs.fault_diagnostics }})
 
 permissions:
   contents: read
@@ -50,6 +54,7 @@ jobs:
         shell: bash
         env:
           DISABLE_2M: ${{ inputs.disable_2m }}
+          FAULT_DIAGNOSTICS: ${{ inputs.fault_diagnostics }}
         run: |
           set -euo pipefail
           cd "$BLE_DIAG_WORKSPACE"
@@ -57,14 +62,25 @@ jobs:
           if [ "$DISABLE_2M" = true ]; then
             phy_args=(-DCONFIG_BT_CTLR_PHY_2M=n)
           fi
+          diag_conf="$GITHUB_WORKSPACE/diagnostics/ble-diagnostics.conf"
+          if [ "$FAULT_DIAGNOSTICS" = true ]; then
+            diag_conf="$GITHUB_WORKSPACE/diagnostics/ble-fault-diagnostics.conf"
+          fi
           west build -s zmk/app -d build -b OMM_nrf52840 -- \
             -DSHIELD=OMM \
             -DZMK_CONFIG="$BLE_DIAG_WORKSPACE/config" \
             -DZMK_EXTRA_MODULES="$GITHUB_WORKSPACE" \
-            -DEXTRA_CONF_FILE="$GITHUB_WORKSPACE/diagnostics/ble-diagnostics.conf" \
+            -DEXTRA_CONF_FILE="$diag_conf" \
             "${phy_args[@]}"
           if [ "$DISABLE_2M" = true ]; then
             grep -Fx '# CONFIG_BT_CTLR_PHY_2M is not set' build/zephyr/.config
+          fi
+          if [ "$FAULT_DIAGNOSTICS" = true ]; then
+            for setting in CONFIG_ASSERT=y CONFIG_HW_STACK_PROTECTION=y CONFIG_FAULT_DUMP=2 \
+              CONFIG_THREAD_NAME=y CONFIG_ZMK_LOG_LEVEL=3 CONFIG_BT_CONN_LOG_LEVEL=3 \
+              CONFIG_BT_GATT_LOG_LEVEL=3 CONFIG_BT_SMP_LOG_LEVEL=3; do
+              grep -Fx "$setting" build/zephyr/.config
+            done
           fi
 
       - name: Collect firmware and build evidence
@@ -88,6 +104,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: OMM-BLE-diagnostics${{ inputs.disable_2m && '-1M' || '' }}
+          name: OMM-BLE-diagnostics${{ inputs.disable_2m && '-1M' || '' }}${{ inputs.fault_diagnostics && '-fault' || '' }}
           path: ble-diagnostic-artifacts/
           if-no-files-found: warn

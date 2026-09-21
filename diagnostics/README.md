@@ -142,3 +142,17 @@ Windows 蓝牙关闭并重启键盘后，三次 A 的按下/释放共六个事�
 工作流新增 `disable_2m` 复选框，默认 false 保留基线。勾选后只增加 `CONFIG_BT_CTLR_PHY_2M=n`，不改日志、安全选项或配对数据。构建完成会检查最终 `.config` 确实禁用 2M，artifact 名为 `OMM-BLE-diagnostics-1M`。该变体尚待 Actions 编译和硬件对照；此前日志没有实际 PHY 协商记录，故这只是有官方兼容性依据的实验，不能视为已经定位 2M 故障。
 
 测试：刷 1M 变体，Windows 蓝牙先关闭，确认本地按键日志正常，再开启蓝牙观察连接和三次 A 的结果。保留旧配对和同样的 USB/串口工具。若仍失败，下一个独立实验应隔离同一 Windows 上的 USB 日志路径或诊断开销；不要同时清 bond 或叠加其他修复。
+
+## 后续观察：1M 与纯电池仍失败，增加异常检测
+
+1M 测试仍出现同样现象；连续按 A 的另一段日志首次捕获到 `sec=1 subscribed=1 len=8 result=0` 的 notify 结果，随后加密成功事件出现，日志中途截断。没有 TX completion/fault/disconnect 证据，不能把 notify 返回 0 当作 Windows 已接收，也不能断言未加密发送就是断开根因。
+
+用户进一步确认：完全拔掉 USB、纯电池重启后仍短暂连接再断开。这排除了 USB 线/串口软件作为该连接失败的必要条件，但未排除固件内部日志开销、控制器异常、线程或 Windows 端的问题。
+
+新增 `fault_diagnostics` 复选框：用 `ble-fault-diagnostics.conf` 替代原诊断配置，将 ZMK/GATT/CONN/SMP 日志降至 INFO，保留 BLE-DIAG 的连接、HID、订阅及返回值记录，并开启 ASSERT、HW_STACK_PROTECTION、FAULT_DUMP=2、THREAD_NAME。保持已有线程栈大小，不应用独立 HOG 权限修正，也不改变配对数据。构建会检查最终配置值。
+
+此变体用于捕获断言、栈溢出和其他 fault，不是已证实的修复。降低日志与增加检测都会改变时序/内存布局；若它恢复正常，仍须进一步分别验证，不能直接宣布栈溢出或日志过量为根因。异常时 USB 后端也可能无法输出，因此没有 fault 行不能排除崩溃。
+
+为与上一轮比较，运行时同时勾选 `disable_2m` 和 `fault_diagnostics`，下载 `OMM-BLE-diagnostics-1M-fault`。先关闭 Windows 蓝牙启动并接串口，然后开启蓝牙、按 A，保存完整日志和 ELF/map。优先检查 ASSERTION、MPU/FAULT、stack overflow、Current thread、PC，以及 BLE-DIAG disconnected 的原因码。此变体尚未经过 Actions 编译或实机验证。
+
+机制参考：[Zephyr Fatal Errors](https://docs.zephyrproject.org/latest/kernel/services/other/fatal.html)。
