@@ -33,7 +33,8 @@ jobs:
           set -euo pipefail
           cd "$BLE_DIAG_WORKSPACE"
           test "$(git -C zmk rev-parse HEAD)" = edf5c0814fd3ea202e43aad2d68fd32e882a518c
-          west manifest --freeze > resolved-manifest.yml
+          # west update skips inactive groups; freeze the same active project set.
+          west manifest --freeze --active-only > resolved-manifest.yml
           git -C zmk apply --check "$GITHUB_WORKSPACE/diagnostics/zmk-v0.3-ble-diagnostics.patch"
           git -C zmk apply "$GITHUB_WORKSPACE/diagnostics/zmk-v0.3-ble-diagnostics.patch"
           git -C zmk diff > applied-diagnostics.patch
