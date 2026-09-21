@@ -156,3 +156,5 @@ Windows 蓝牙关闭并重启键盘后，三次 A 的按下/释放共六个事�
 为与上一轮比较，运行时同时勾选 `disable_2m` 和 `fault_diagnostics`，下载 `OMM-BLE-diagnostics-1M-fault`。先关闭 Windows 蓝牙启动并接串口，然后开启蓝牙、按 A，保存完整日志和 ELF/map。优先检查 ASSERTION、MPU/FAULT、stack overflow、Current thread、PC，以及 BLE-DIAG disconnected 的原因码。此变体尚未经过 Actions 编译或实机验证。
 
 机制参考：[Zephyr Fatal Errors](https://docs.zephyrproject.org/latest/kernel/services/other/fatal.html)。
+
+首个 fault 变体已成功链接并生成 UF2，ASSERT/HW_STACK_PROTECTION/FAULT_DUMP/THREAD_NAME 检查通过，但后置 ZMK_LOG_LEVEL=3 检查失败。v0.3 在未启用 ZMK_LOGGING_MINIMAL 时，为 ZMK_LOG_LEVEL 提供了优先级更高的 default 4，单独设置 ZMK_LOG_LEVEL_INF 不足以降级。fault 配置现增加 ZMK_LOGGING_MINIMAL=y，同时保留 INFO 选择；仅抑制 DEBUG，不关闭 BLE-DIAG INFO。检查失败时工作流也会打印预期符号及实际值，避免无说明退出。修正后的最终值仍须新一轮 Actions 验证。

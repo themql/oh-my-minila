@@ -79,7 +79,12 @@ jobs:
             for setting in CONFIG_ASSERT=y CONFIG_HW_STACK_PROTECTION=y CONFIG_FAULT_DUMP=2 \
               CONFIG_THREAD_NAME=y CONFIG_ZMK_LOG_LEVEL=3 CONFIG_BT_CONN_LOG_LEVEL=3 \
               CONFIG_BT_GATT_LOG_LEVEL=3 CONFIG_BT_SMP_LOG_LEVEL=3; do
-              grep -Fx "$setting" build/zephyr/.config
+              if ! grep -Fx "$setting" build/zephyr/.config; then
+                symbol="${setting%%=*}"
+                echo "::error::Expected $setting; actual configuration follows"
+                grep -E "^${symbol}=|^# ${symbol} is not set$" build/zephyr/.config || true
+                exit 1
+              fi
             done
           fi
 
