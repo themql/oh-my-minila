@@ -158,3 +158,11 @@ Windows 蓝牙关闭并重启键盘后，三次 A 的按下/释放共六个事�
 机制参考：[Zephyr Fatal Errors](https://docs.zephyrproject.org/latest/kernel/services/other/fatal.html)。
 
 首个 fault 变体已成功链接并生成 UF2，ASSERT/HW_STACK_PROTECTION/FAULT_DUMP/THREAD_NAME 检查通过，但后置 ZMK_LOG_LEVEL=3 检查失败。v0.3 在未启用 ZMK_LOGGING_MINIMAL 时，为 ZMK_LOG_LEVEL 提供了优先级更高的 default 4，单独设置 ZMK_LOG_LEVEL_INF 不足以降级。fault 配置现增加 ZMK_LOGGING_MINIMAL=y，同时保留 INFO 选择；仅抑制 DEBUG，不关闭 BLE-DIAG INFO。检查失败时工作流也会打印预期符号及实际值，避免无说明退出。修正后的最终值仍须新一轮 Actions 验证。
+
+## 2026-09-22：连接稳定、发送完成，但 Windows 无输入
+
+修正后的 fault 变体运行日志显示约 14.07 秒重连、sec=4，随后五次按下/释放共十份报告均为 subscribed=1、result=0，且都有 tx-complete。用户确认蓝牙保持连接，但输入框无内容。该时间段内没有 fault 或断开证据，说明“连接后立即停止日志”与当前“持续发送但无输入”不能混为同一个已定位原因。降低日志与保护配置可能改变前者，但尚未分别验证。
+
+在此状态下仍缺少报告内容证据。诊断 patch 现增加 `LOG_HEXDUMP_INF`，打印每次 notify 前实际报告体，紧随含 attr 的 notify-attempt 行。仅增加日志，不修改 handle、报告内容或安全逻辑。以当前 6-key HKRO 为例，重启后无其他键按下，单独按 A 通常应为 `00 00 04 00 00 00 00 00`，释放应为八个 00；04 位于六个键槽中的其他位置也可合法。BLE body 不应额外插入 report ID。
+
+下一次继续使用同样两个构建选项，采集慢速按/放 A 的报告体与 result/tx-complete。正确报告加本地完成回调仍不等于 Windows HID 已消费；若内容正确，后续再检查 Windows 的 HID collection、缓存和接收链路。无需提前清配对。十六进制日志会记录实际输入，只输入测试字符。

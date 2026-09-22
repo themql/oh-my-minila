@@ -56,7 +56,7 @@
              return;
          }
  
-@@ -322,9 +350,16 @@
+@@ -322,9 +350,17 @@
              .len = sizeof(report),
          };
  
@@ -64,6 +64,7 @@
 +        notify_params.user_data = (void *)notify_params.attr;
 +        LOG_INF("BLE-DIAG notify-attempt conn=%p attr=0x%04x", (void *)conn,
 +                bt_gatt_attr_get_handle(notify_params.attr));
++        LOG_HEXDUMP_INF(notify_params.data, notify_params.len, "BLE-DIAG TX report body");
          int err = bt_gatt_notify_cb(conn, &notify_params);
 +        diag_notify_state(conn, notify_params.attr, notify_params.len, err);
          if (err == -EPERM) {
@@ -74,7 +75,7 @@
          } else if (err) {
              LOG_DBG("Error notifying %d", err);
          }
-@@ -351,7 +386,9 @@
+@@ -351,7 +387,9 @@
          }
      }
  
@@ -85,7 +86,7 @@
  
      return 0;
  };
-@@ -365,6 +402,8 @@
+@@ -365,6 +403,8 @@
      while (k_msgq_get(&zmk_hog_consumer_msgq, &report, K_NO_WAIT) == 0) {
          struct bt_conn *conn = zmk_ble_active_profile_conn();
          if (conn == NULL) {
@@ -94,7 +95,7 @@
              return;
          }
  
-@@ -374,9 +413,16 @@
+@@ -374,9 +414,17 @@
              .len = sizeof(report),
          };
  
@@ -102,6 +103,7 @@
 +        notify_params.user_data = (void *)notify_params.attr;
 +        LOG_INF("BLE-DIAG notify-attempt conn=%p attr=0x%04x", (void *)conn,
 +                bt_gatt_attr_get_handle(notify_params.attr));
++        LOG_HEXDUMP_INF(notify_params.data, notify_params.len, "BLE-DIAG TX report body");
          int err = bt_gatt_notify_cb(conn, &notify_params);
 +        diag_notify_state(conn, notify_params.attr, notify_params.len, err);
          if (err == -EPERM) {
@@ -112,7 +114,7 @@
          } else if (err) {
              LOG_DBG("Error notifying %d", err);
          }
-@@ -418,6 +464,8 @@
+@@ -418,6 +466,8 @@
      while (k_msgq_get(&zmk_hog_mouse_msgq, &report, K_NO_WAIT) == 0) {
          struct bt_conn *conn = zmk_ble_active_profile_conn();
          if (conn == NULL) {
@@ -121,7 +123,7 @@
              return;
          }
  
-@@ -427,9 +475,16 @@
+@@ -427,9 +477,17 @@
              .len = sizeof(report),
          };
  
@@ -129,6 +131,7 @@
 +        notify_params.user_data = (void *)notify_params.attr;
 +        LOG_INF("BLE-DIAG notify-attempt conn=%p attr=0x%04x", (void *)conn,
 +                bt_gatt_attr_get_handle(notify_params.attr));
++        LOG_HEXDUMP_INF(notify_params.data, notify_params.len, "BLE-DIAG TX report body");
          int err = bt_gatt_notify_cb(conn, &notify_params);
 +        diag_notify_state(conn, notify_params.attr, notify_params.len, err);
          if (err == -EPERM) {
